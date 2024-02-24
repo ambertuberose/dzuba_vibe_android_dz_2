@@ -1,0 +1,47 @@
+import kotlinx.coroutines.*
+import java.net.HttpURLConnection
+import java.net.URL
+
+fun main() {
+    val websites = listOf(
+       "https://www.google.com",
+        "https://www.facebook.com",
+        "https://www.github.com",
+        "https://www.twitter.com",
+        "https://www.instagram.com",
+        "https://teach.vibelab.ru",
+        "https://music.yandex.ru",
+        "https://vk.com",
+        "https://ru.wikipedia.org",
+        "https://yandex.ru"
+    )
+
+    runBlocking {
+        val jobs = mutableListOf<Job>()
+        for (site in websites) {
+            jobs.add(
+                launch {
+                    val available = checkWebsite(site)
+                    if (available) {
+                        println("Сайт $site доступен")
+                    } else {
+                        println("Сайт $site недоступен")
+                    }
+                }
+            )
+        }
+        jobs.forEach { it.join() }
+    }
+}
+
+suspend fun checkWebsite(url: String): Boolean {
+    return try {
+        val connection = URL(url).openConnection() as HttpURLConnection
+        connection.requestMethod = "HEAD"
+        connection.connectTimeout = 5000
+        connection.readTimeout = 5000
+        connection.responseCode == HttpURLConnection.HTTP_OK
+    } catch (e: Exception) {
+        false
+    }
+}
